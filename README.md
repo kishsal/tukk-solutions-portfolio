@@ -3,10 +3,10 @@
 The sales-front-door website for **Tukk Solutions**, which builds modern,
 mobile-first websites for local businesses (trades & services) across the GTA.
 
-## Architecture: one App Service, many portfolios
+## Architecture: one Static Web App, many portfolios
 
 The whole site is **one static website** (plain HTML/CSS/JS, no build step)
-deployed to a **single Azure App Service**. It is organised so outreach can
+deployed to a **single Azure Static Web App** (Free tier). It is organised so outreach can
 send a prospect **one link that lands them in their own industry's showcase**:
 
 | Page | Purpose |
@@ -40,42 +40,30 @@ numbers. Design rationale lives in `DESIGN-NOTES.md`.
 Shared assets: `assets/styles.css`, `assets/app.js`, `assets/logo-mark.png`
 (the Rising Bars brand mark).
 
-## How deployment works
+## How deployment works — the tukkhome model
 
-`.github/workflows/azure-deploy.yml` runs on every push to `main`
-(and manually via *Actions → Run workflow*):
+Same pattern as `kishsal/tukkhome` (tukkhome.xyz): this repo holds the code;
+deployment runs from the **Deploy Tukk Solutions Portfolio** workflow in the
+`kishsal/tukkhome` repo (`.github/workflows/deploy-portfolio.yml`), on the
+self-hosted runner (`azure-deploy` label) whose Azure CLI login holds the
+access — no publish profiles, no repo secrets, no Azure portal work.
 
-1. `actions/checkout@v4` checks out the repo.
-2. No build step — the repo root is the web root.
-3. `azure/webapps-deploy@v3` publishes the package (`.`) to the Azure
-   Web App named **`tukk-solutions-portfolio`**, authenticated with the
-   publish profile stored in the `AZURE_WEBAPP_PUBLISH_PROFILE` repo secret.
+That workflow, on manual dispatch:
+1. Checks out THIS repo (`kishsal/tukk-solutions-portfolio@main`).
+2. Creates the Static Web App if it doesn't exist yet
+   (`tukk-solutions-portfolio`, resource group `family-hub-rg`, Free SKU).
+3. Fetches the deployment token via `az staticwebapp secrets list` and
+   deploys the site files (`*.html`, `industries/`, `assets/`) with the
+   SWA CLI (`swa deploy --env production`).
+4. Smoke-tests the live home page and the plumbing portfolio page.
 
-One workflow, one App Service, one deploy — all pages (home, work, every
-industry portfolio) ship together.
+This repo's own `.github/workflows/ci.yml` is validate-only (HTML parse
+check on push/PR), mirroring tukkhome's validate-first pattern.
 
-## One-time setup (Azure side)
-
-1. **Create the App Service** in the Azure Portal:
-   *Create a resource → Web App* — name it `tukk-solutions-portfolio`
-   (or rename the app in the workflow to match), publish type **Code**,
-   runtime stack any static-friendly stack (e.g. Node or PHP — the content
-   is static), OS **Linux**, on the cheapest tier that fits (F1/B1 to start).
-   Alternatively use **Azure Static Web Apps** — the same files deploy
-   unchanged; only the workflow action would differ.
-2. **Download the publish profile**: in the Web App's *Overview* page,
-   choose **Get publish profile** and save the `.PublishSettings` file.
-   (Basic authentication for publishing must be enabled — *Configuration →
-   General settings → SCM basic auth publishing* — for publish-profile
-   deploys to work.)
-3. **Add the repo secret**: in this GitHub repo, *Settings → Secrets and
-   variables → Actions → New repository secret* — name it exactly
-   `AZURE_WEBAPP_PUBLISH_PROFILE` and paste the entire contents of the
-   `.PublishSettings` file.
-4. **Push to `main`** (or run the workflow manually) and watch the
-   *Actions* tab. When it's green, the site is live at
-   `https://tukk-solutions-portfolio.azurewebsites.net`
-   (plus any custom domain you bind to the App Service).
+**To ship a change:** push to `main` here, then dispatch *Deploy Tukk
+Solutions Portfolio* in the tukkhome repo (Arlo runs it). The site is live
+at the Static Web App's default hostname
+(`https://<name>.azurestaticapps.net` — see the workflow run summary).
 
 ## Local preview
 

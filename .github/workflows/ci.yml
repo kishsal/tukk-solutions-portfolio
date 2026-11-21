@@ -1,0 +1,31 @@
+name: Validate portfolio source
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate static pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Parse every HTML page
+        run: |
+          python3 - <<'PY'
+          import glob, sys
+          from html.parser import HTMLParser
+          files = sorted(glob.glob('**/*.html', recursive=True))
+          assert files, 'no HTML files found'
+          for f in files:
+              HTMLParser().feed(open(f, encoding='utf-8').read())
+              print('OK', f)
+          print(f'{len(files)} pages parsed cleanly')
+          PY
