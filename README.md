@@ -61,9 +61,11 @@ This repo's own `.github/workflows/ci.yml` is validate-only (HTML parse
 check on push/PR), mirroring tukkhome's validate-first pattern.
 
 **To ship a change:** push to `main` here, then dispatch *Deploy Tukk
-Solutions Portfolio* in the tukkhome repo (Arlo runs it). The site is live
-at the Static Web App's default hostname
-(`https://<name>.azurestaticapps.net` — see the workflow run summary).
+Solutions Portfolio* in the tukkhome repo (Arlo runs it).
+
+**Live:** https://green-river-0101fc30f.5.azurestaticapps.net
+(first deployed Nov 21, 2026; home, work index, industry portfolios and
+pricing all verified HTTP 200).
 
 ## Local preview
 
