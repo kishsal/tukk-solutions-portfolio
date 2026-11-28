@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://green-river-0101fc30f.5.azurestaticapps.net/sitemap.xml
